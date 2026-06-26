@@ -1,0 +1,68 @@
+import pandas as pd
+import joblib
+
+from sklearn.compose import ColumnTransformer
+from sklearn.pipeline import Pipeline
+
+from sklearn.preprocessing import OneHotEncoder
+
+from sklearn.linear_model import LinearRegression
+
+df = pd.read_csv(
+    "cleaned_data.csv"
+)
+
+target = "Projected Openings (2030)"
+
+X = df.drop(
+    columns=[target]
+)
+
+y = df[target]
+
+categorical = X.select_dtypes(
+    include="object"
+).columns
+
+numeric = X.select_dtypes(
+    exclude="object"
+).columns
+
+preprocessor = ColumnTransformer(
+    transformers=[
+        (
+            "cat",
+            OneHotEncoder(
+                handle_unknown="ignore"
+            ),
+            categorical
+        ),
+        (
+            "num",
+            "passthrough",
+            numeric
+        )
+    ]
+)
+
+pipeline = Pipeline([
+    (
+        "preprocessor",
+        preprocessor
+    ),
+    (
+        "model",
+        LinearRegression()
+    )
+])
+
+pipeline.fit(X,y)
+
+joblib.dump(
+    pipeline,
+    "../models/linear_regression.pkl"
+)
+
+print(
+    "Model saved successfully."
+)
